@@ -31,6 +31,8 @@ export interface Doctor {
     id: number;
     name: string;
     specialization: string;
+    averageRating?: number;
+    ratingCount?: number;
 }
 
 // 5. Slot / Wizyta (Najważniejszy typ)

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { api, socket } from '../services/api'; 
 import CalendarView from '../components/CalendarView';
-import DoctorPanel from '../components/DoctorPanel'; // Zakładam, że ten komponent też przerobisz/masz
+import DoctorPanel from '../components/DoctorPanel'; 
 import ReservationModal from '../components/ReservationModal';
+import DoctorReviews from '../components/DoctorReviews'; // Import komponentu opinii
 import { useAuth } from '../context/AuthContext';
 import { SPECIALIZATIONS } from '../utils/specializations';
 import type { Doctor, Slot, Absence, ReservationFormData } from '../types';
@@ -12,28 +13,27 @@ const Dashboard: React.FC = () => {
     const role = user ? user.role : null;
     const myId = localStorage.getItem('userId'); 
 
-    // Stan danych z typami
+    // Stan danych
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]); 
     const [selectedSpec, setSelectedSpec] = useState<string>('Wszystkie'); 
     
     // Stan widoku
-    // const [selectedDoctorId, setSelectedDoctorId] = useState<number | string | null>(null);
     const [selectedDoctorId, setSelectedDoctorId] = useState<number | string | null>(() => {
-    // Jeśli to lekarz, od razu ustawiamy jego ID jako domyślne
-    if (user?.role === 'doctor') {
-        return localStorage.getItem('userId');
-    }
-    return null;
-});
+        if (user?.role === 'doctor') return localStorage.getItem('userId');
+        return null;
+    });
     
     const [selectedDoctorName, setSelectedDoctorName] = useState<string | null>(null); 
     
-    // Stan kalendarza
+    // Stan kalendarza i modala
     const [slots, setSlots] = useState<Slot[]>([]);
     const [absences, setAbsences] = useState<Absence[]>([]);
     const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<Slot | null>(null);
     const [currentDate, setCurrentDate] = useState<Date>(new Date());
+    
+    // Stan widoczności opinii
+    const [showReviews, setShowReviews] = useState<boolean>(false);
 
     // --- 1. INICJALIZACJA ---
     useEffect(() => {
@@ -55,7 +55,7 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // --- 3. KALENDARZ ---
+    // --- 3. LOGIKA KALENDARZA ---
     const getWeekRange = (date: Date) => {
         const start = new Date(date);
         const day = start.getDay() || 7; 
@@ -90,7 +90,7 @@ const Dashboard: React.FC = () => {
         setCurrentDate(newDate);
     };
 
-    // --- 4. AKCJE ---
+    // --- 4. HANDLERY ---
     const handleDoctorSelect = (doctor: Doctor) => {
         setSelectedDoctorId(doctor.id);
         setSelectedDoctorName(doctor.name);
@@ -100,6 +100,7 @@ const Dashboard: React.FC = () => {
         setSelectedDoctorId(null);
         setSelectedDoctorName(null);
         setSlots([]); 
+        setShowReviews(false); // Resetujemy widok opinii przy powrocie
     };
 
     const handleSlotClick = (slot: Slot) => {
@@ -118,12 +119,29 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    // Funkcja renderująca gwiazdki (używana na kafelkach i w przycisku rozwijania)
+    const renderStars = (rating: number, count: number) => {
+        if (!count || count === 0) {
+            return <span style={{ color: '#bdc3c7', fontSize: '0.85rem' }}>Brak opinii</span>;
+        }
+        return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ color: '#f1c40f', fontSize: '1rem' }}>★</span>
+                <span style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '0.9rem' }}>{rating}</span>
+                <span style={{ color: '#7f8c8d', fontSize: '0.8rem' }}>({count})</span>
+            </div>
+        );
+    };
+
     if (!user) return <div style={{padding: 20}}>Ładowanie...</div>;
+
+    // Pomocnicza zmienna do pobrania danych aktualnie wybranego lekarza (do sekcji dolnej)
+    const currentSelectedDoctor = doctors.find(d => d.id == selectedDoctorId);
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 10px' }}>
             
-            {/* --- WIDOK PACJENTA: LISTA LEKARZY (Gdy nie wybrano lekarza) --- */}
+            {/* --- WIDOK PACJENTA: LISTA LEKARZY --- */}
             {role === 'patient' && !selectedDoctorId && (
                 <div>
                     {/* FILTRY */}
@@ -145,29 +163,29 @@ const Dashboard: React.FC = () => {
                         ))}
                     </div>
 
-                    {/* KAFELKI Z LEKARZAMI */}
+                    {/* GRID LEKARZY */}
                     <div style={styles.grid}>
                         {filteredDoctors.map(doctor => (
                             <div key={doctor.id} style={styles.card}>
                                 <div style={{ padding: '20px' }}>
-                                    <h3 style={{ margin: '0 0 10px 0', color: '#2c3e50', fontSize: '1.2rem' }}>
-                                        {doctor.name}
-                                    </h3>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
+                                        <h3 style={{ margin: 0, color: '#2c3e50', fontSize: '1.2rem' }}>
+                                            {doctor.name}
+                                        </h3>
+                                        <div style={{ marginTop: '2px', flexShrink: 0 }}>
+                                            {renderStars(doctor.averageRating || 0, doctor.ratingCount || 0)}
+                                        </div>
+                                    </div>
                                     
                                     <div style={styles.badge}>
                                         {doctor.specialization || "Lekarz Ogólny"}
                                     </div>
-                                    
                                     <p style={{ color: '#7f8c8d', fontSize: '0.9rem', marginTop: '15px' }}>
                                         Dostępny w systemie online.
                                     </p>
                                 </div>
-                                
                                 <div style={styles.cardFooter}>
-                                    <button 
-                                        onClick={() => handleDoctorSelect(doctor)}
-                                        style={styles.cardButton}
-                                    >
+                                    <button onClick={() => handleDoctorSelect(doctor)} style={styles.cardButton}>
                                         Sprawdź Terminy →
                                     </button>
                                 </div>
@@ -180,6 +198,7 @@ const Dashboard: React.FC = () => {
             {/* --- WIDOK KALENDARZA --- */}
             {selectedDoctorId && (
                 <div>
+                    {/* NAGŁÓWEK KALENDARZA - CZYSTY (Bez gwiazdek i toggle) */}
                     <div style={styles.calendarHeader}>
                         {role === 'patient' && (
                             <button onClick={handleBackToList} style={styles.backButton}>
@@ -202,6 +221,7 @@ const Dashboard: React.FC = () => {
                         )}
                     </div>
 
+                    {/* KALENDARZ */}
                     <div style={styles.calendarWrapper}>
                         <CalendarView 
                             slots={slots}
@@ -212,6 +232,50 @@ const Dashboard: React.FC = () => {
                             role={role}
                         />
                     </div>
+
+                    {/* --- NOWA SEKCJA POD KALENDARZEM: ROZWIJANE OPINIE --- */}
+                    {role === 'patient' && currentSelectedDoctor && (
+                        <div style={{ marginTop: '20px' }}>
+                            {/* Przycisk rozwijania / Pasek podsumowania */}
+                            <button 
+                                onClick={() => setShowReviews(!showReviews)}
+                                style={{
+                                    width: '100%',
+                                    padding: '15px',
+                                    background: 'white',
+                                    border: '1px solid #eee',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
+                                    transition: 'background 0.2s'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = '#f8f9fa'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'white'}
+                            >
+                                <span style={{ color: '#2c3e50', fontWeight: 'bold', fontSize: '1rem' }}>
+                                    Opinie pacjentów
+                                </span>
+                                
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    {/* Pokazujemy gwiazdki na pasku, żeby zachęcić do kliknięcia */}
+                                    {renderStars(currentSelectedDoctor.averageRating || 0, currentSelectedDoctor.ratingCount || 0)}
+                                    <span style={{ color: '#3498db', fontSize: '0.9rem' }}>
+                                        {showReviews ? '▲ Zwiń' : '▼ Rozwiń'}
+                                    </span>
+                                </div>
+                            </button>
+
+                            {/* Treść opinii (Komponent) */}
+                            {showReviews && (
+                                <div style={{ marginTop: '10px', animation: 'fadeIn 0.3s' }}>
+                                    <DoctorReviews doctorId={selectedDoctorId} />
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -234,121 +298,59 @@ const Dashboard: React.FC = () => {
     );
 };
 
-// ... Styles (bez zmian, obiekt JS działa w TS) ...
+// Style
 const styles: Record<string, React.CSSProperties> = {
     filterContainer: {
-        display: 'flex',
-        justifyContent: 'center',
-        flexWrap: 'wrap',
-        gap: '10px',
-        marginBottom: '30px'
+        display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '30px'
     },
     filterBtn: {
-        padding: '8px 16px',
-        borderRadius: '20px',
-        border: 'none',
-        cursor: 'pointer',
-        background: '#ecf0f1',
-        color: '#2c3e50',
-        fontWeight: 'bold',
-        transition: 'all 0.3s'
+        padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+        background: '#ecf0f1', color: '#2c3e50', fontWeight: 'bold', transition: 'all 0.3s'
     },
     filterBtnActive: {
-        padding: '8px 16px',
-        borderRadius: '20px',
-        border: 'none',
-        cursor: 'pointer',
-        background: '#2c3e50',
-        color: 'white',
-        fontWeight: 'bold',
-        boxShadow: '0 2px 5px rgba(44, 62, 80, 0.3)',
-        transform: 'scale(1.05)'
+        padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+        background: '#2c3e50', color: 'white', fontWeight: 'bold',
+        boxShadow: '0 2px 5px rgba(44, 62, 80, 0.3)', transform: 'scale(1.05)'
     },
     grid: {
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: '20px'
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px'
     },
     card: {
-        background: 'white',
-        borderRadius: '12px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-        overflow: 'hidden',
-        border: '1px solid #eee',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        transition: 'transform 0.2s'
+        background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+        overflow: 'hidden', border: '1px solid #eee', display: 'flex', flexDirection: 'column',
+        justifyContent: 'space-between', transition: 'transform 0.2s'
     },
     badge: {
-        display: 'inline-block',
-        background: '#e1f5fe', 
-        color: '#0288d1',       
-        padding: '5px 12px',
-        borderRadius: '15px',
-        fontSize: '0.85rem',
-        fontWeight: 'bold'
+        display: 'inline-block', background: '#e1f5fe', color: '#0288d1',       
+        padding: '5px 12px', borderRadius: '15px', fontSize: '0.85rem', fontWeight: 'bold'
     },
     cardFooter: {
-        background: '#f8f9fa',
-        padding: '15px',
-        borderTop: '1px solid #eee',
-        textAlign: 'center'
+        background: '#f8f9fa', padding: '15px', borderTop: '1px solid #eee', textAlign: 'center'
     },
     cardButton: {
-        background: 'transparent',
-        border: 'none',
-        color: '#3498db',
-        fontWeight: 'bold',
-        fontSize: '1rem',
-        cursor: 'pointer',
-        padding: '5px'
+        background: 'transparent', border: 'none', color: '#3498db', fontWeight: 'bold',
+        fontSize: '1rem', cursor: 'pointer', padding: '5px'
     },
     calendarHeader: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '20px',
-        background: 'white',
-        padding: '15px 25px',
-        borderRadius: '12px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-        border: '1px solid #eee'
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px',
+        background: 'white', padding: '15px 25px', borderRadius: '12px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #eee'
     },
     navButton: {
-        background: '#f1f2f6',
-        border: 'none',
-        padding: '8px 15px',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontWeight: 'bold',
-        color: '#2c3e50',
-        fontSize: '1.1rem'
+        background: '#f1f2f6', border: 'none', padding: '8px 15px', borderRadius: '6px',
+        cursor: 'pointer', fontWeight: 'bold', color: '#2c3e50', fontSize: '1.1rem'
     },
     backButton: {
-        background: 'transparent',
-        border: '1px solid #bdc3c7',
-        color: '#7f8c8d',
-        padding: '8px 15px',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        fontSize: '0.9rem',
-        fontWeight: '500'
+        background: 'transparent', border: '1px solid #bdc3c7', color: '#7f8c8d',
+        padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500'
     },
     doctorNameLabel: {
-        background: '#e1f5fe',
-        color: '#0288d1',
-        padding: '4px 10px',
-        borderRadius: '4px',
-        fontWeight: 'bold',
-        fontSize: '0.9rem'
+        background: '#e1f5fe', color: '#0288d1', padding: '4px 10px', borderRadius: '4px',
+        fontWeight: 'bold', fontSize: '0.9rem'
     },
     calendarWrapper: {
-        background: 'white',
-        padding: '20px',
-        borderRadius: '12px',
-        boxShadow: '0 5px 15px rgba(0,0,0,0.05)',
-        border: '1px solid #eee'
+        background: 'white', padding: '20px', borderRadius: '12px',
+        boxShadow: '0 5px 15px rgba(0,0,0,0.05)', border: '1px solid #eee'
     }
 };
 
