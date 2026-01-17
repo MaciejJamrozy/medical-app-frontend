@@ -90,7 +90,7 @@ export interface ReservationFormData {
     patientAge: string | number;
     patientGender: string;
     notes: string;
-    attachment?: File | null;
+    attachments?: File[];
 }
 
 // 10. Dane do generatora cyklicznego (DoctorPanel)

@@ -16,15 +16,16 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
         patientAge: '',
         patientGender: 'Mężczyzna',
         notes: '',
-        attachment: null
+        attachments: []
     });
 
     if (!slot) return null;
     
     // Obsługa wyboru pliku
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFormData({ ...formData, attachment: e.target.files[0] });
+        if (e.target.files) {
+            // Konwertujemy FileList na zwykłą tablicę
+            setFormData({ ...formData, attachments: Array.from(e.target.files) });
         }
     };
 
@@ -111,18 +112,17 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
                         </div>
                     </div>
 
-                    {/* --- NOWE POLE: PLIK --- */}
+                    {/* Input na pliki */}
                     <div style={{ marginBottom: '15px' }}>
-                        <label>Wyniki badań / Załącznik (opcjonalnie):</label>
+                        <label>Wyniki badań (możesz wybrać kilka):</label>
                         <input 
                             type="file" 
+                            multiple  // <--- DODAJEMY ATTRYBUT MULTIPLE
                             accept=".pdf,.jpg,.png,.doc,.docx"
                             onChange={handleFileChange}
                             style={{ marginTop: '5px' }}
                         />
-                        <small style={{display:'block', color:'#666', marginTop:'2px'}}>
-                            Max 5MB (PDF, JPG)
-                        </small>
+                        <small>Wybrano plików: {formData.attachments?.length || 0}</small>
                     </div>
 
                     {/* 4. Notatki */}
