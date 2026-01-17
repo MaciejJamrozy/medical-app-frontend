@@ -189,8 +189,30 @@ export const api = {
     getDoctorAbsences: (doctorId: number | string) => apiInstance.get<Absence[]>(`/doctor/${doctorId}/absences`).then(res => res.data),
 
     // Pacjent
-    addToCart: (slotId: number, duration: number, details: ReservationFormData) => 
-        apiInstance.post('/cart/add', { startSlotId: slotId, duration, details }),
+    // addToCart: (slotId: number, duration: number, details: ReservationFormData) => 
+    //     apiInstance.post('/cart/add', { startSlotId: slotId, duration, details }),
+
+    addToCart: (slotId: number, duration: number, details: ReservationFormData) => {
+        const formData = new FormData();
+        
+        formData.append('startSlotId', String(slotId));
+        formData.append('duration', String(duration));
+        
+        const { attachment, ...restDetails } = details;
+        formData.append('details', JSON.stringify(restDetails));
+
+        if (attachment) {
+            formData.append('file', attachment);
+        }
+
+        // ZMIANA TUTAJ: Dodajemy trzeci argument z konfiguracją nagłówków
+        return apiInstance.post('/cart/add', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
+
     getCart: () => apiInstance.get<CartItem[]>('/cart').then(res => res.data),
     removeFromCart: (slotId: number) => apiInstance.delete(`/cart/${slotId}`),
     checkout: () => apiInstance.post('/cart/checkout'),

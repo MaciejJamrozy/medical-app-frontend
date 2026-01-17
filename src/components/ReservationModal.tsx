@@ -15,10 +15,18 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
         patientName: authManager.getName() || '', 
         patientAge: '',
         patientGender: 'Mężczyzna',
-        notes: ''
+        notes: '',
+        attachment: null
     });
 
     if (!slot) return null;
+    
+    // Obsługa wyboru pliku
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFormData({ ...formData, attachment: e.target.files[0] });
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -101,6 +109,20 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
                                 <option>Inna</option>
                             </select>
                         </div>
+                    </div>
+
+                    {/* --- NOWE POLE: PLIK --- */}
+                    <div style={{ marginBottom: '15px' }}>
+                        <label>Wyniki badań / Załącznik (opcjonalnie):</label>
+                        <input 
+                            type="file" 
+                            accept=".pdf,.jpg,.png,.doc,.docx"
+                            onChange={handleFileChange}
+                            style={{ marginTop: '5px' }}
+                        />
+                        <small style={{display:'block', color:'#666', marginTop:'2px'}}>
+                            Max 5MB (PDF, JPG)
+                        </small>
                     </div>
 
                     {/* 4. Notatki */}
