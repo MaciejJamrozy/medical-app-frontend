@@ -1,0 +1,133 @@
+/* Reset podstawowy */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f4f7f6; /* Jasnoszare tło - standard w systemach admin */
+  color: #333;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Podstawowe style formularzy - przydadzą się wszędzie */
+input, select, button {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Klasy pomocnicze */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2, h3 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+/* --- KALENDARZ MACIERZOWY --- */
+
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+/* Siatka dni (Nagłówki kolumn) */
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr); /* 60px na godziny + 7 dni */
+  gap: 1px;
+  background-color: #ddd;
+  border-bottom: 2px solid #ccc;
+  font-weight: bold;
+  text-align: center;
+}
+
+.header-cell {
+  background-color: #f4f4f4;
+  padding: 10px 0;
+}
+
+/* Siatka główna (Body) */
+.calendar-grid-body {
+  display: grid;
+  grid-template-columns: 60px repeat(7, 1fr);
+  gap: 1px;
+  background-color: #eee; /* Kolor linii siatki */
+  border: 1px solid #ccc;
+  height: 500px; /* Wysokość kalendarza ze scrollem */
+  overflow-y: auto;
+}
+
+/* Kolumna z godzinami (lewa strona) */
+.time-label {
+  background-color: #fff;
+  color: #666;
+  font-size: 12px;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  padding-top: 5px;
+  border-right: 1px solid #ddd;
+  min-height: 40px; /* Wysokość jednego wiersza (30 min) */
+}
+
+/* Pojedyncza komórka w siatce (Slot) */
+.calendar-cell {
+  background-color: #fff;
+  min-height: 40px;
+  border-bottom: 1px dashed #eee;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.calendar-cell:hover {
+  background-color: #f9f9f9;
+}
+
+/* STANY SLOTÓW (Kolorki) */
+.slot-free {
+  background-color: #e6fffa; /* Zielonkawy - Wolny */
+  border: 1px solid #38b2ac;
+  margin: 2px;
+  border-radius: 4px;
+}
+
+.slot-booked {
+  background-color: #fed7d7; /* Czerwony - Zajęty */
+  border: 1px solid #e53e3e;
+  margin: 2px;
+  border-radius: 4px;
+  pointer-events: none; /* Nie da się kliknąć zajętego */
+  opacity: 0.6;
+}
+
+.slot-pending {
+  background-color: #fefcbf; /* Żółty - W koszyku */
+  border: 1px solid #d69e2e;
+  margin: 2px;
+  border-radius: 4px;
+}
