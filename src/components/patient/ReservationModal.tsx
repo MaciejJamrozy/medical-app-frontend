@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { authManager } from '../services/api'; 
-import type { Slot, ReservationFormData } from '../types';
+import { authManager } from '../../services/api'; 
+import type { Slot, ReservationFormData } from '../../types';
 
 interface ReservationModalProps {
     slot: Slot | null;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Slot, Absence, UserRole } from '../types';
+import type { Slot, Absence, UserRole } from '../../types';
 
 // --- STYLES & HELPERS ---
 

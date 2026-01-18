@@ -1,61 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { api, socket } from '../services/api'; 
-import CalendarView from '../components/CalendarView';
-import DoctorPanel from '../components/DoctorPanel'; 
-import ReservationModal from '../components/ReservationModal';
-import DoctorReviews from '../components/DoctorReviews'; // Import komponentu opinii
+import DoctorPanel from '../components/doctor/DoctorPanel'; 
+import ReservationModal from '../components/patient/ReservationModal';
+import DoctorSchedule from '../components/doctor/DoctorSchedule';
 import { useAuth } from '../context/AuthContext';
-import { SPECIALIZATIONS } from '../utils/specializations';
 import type { Doctor, Slot, Absence, ReservationFormData } from '../types';
+
+// Import nowych komponentów
+import PatientDoctorList from '../components/patient/PatientDoctorList';
+import PatientSchedule from '../components/patient/PatientSchedule';
 
 const Dashboard: React.FC = () => {
     const { user } = useAuth(); 
     const role = user ? user.role : null;
     const myId = localStorage.getItem('userId'); 
 
-    // Stan danych
+    // --- STAN DANYCH ---
     const [doctors, setDoctors] = useState<Doctor[]>([]);
-    const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]); 
-    const [selectedSpec, setSelectedSpec] = useState<string>('Wszystkie'); 
     
-    // Stan widoku
+    // Stan wyboru lekarza
     const [selectedDoctorId, setSelectedDoctorId] = useState<number | string | null>(() => {
         if (user?.role === 'doctor') return localStorage.getItem('userId');
         return null;
     });
-    
-    const [selectedDoctorName, setSelectedDoctorName] = useState<string | null>(null); 
-    
-    // Stan kalendarza i modala
+
+    // Stan kalendarza
     const [slots, setSlots] = useState<Slot[]>([]);
     const [absences, setAbsences] = useState<Absence[]>([]);
-    const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<Slot | null>(null);
     const [currentDate, setCurrentDate] = useState<Date>(new Date());
     
-    // Stan widoczności opinii
-    const [showReviews, setShowReviews] = useState<boolean>(false);
+    // Modal
+    const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<Slot | null>(null);
 
-    // --- 1. INICJALIZACJA ---
+    // --- EFEKTY (POBIERANIE DANYCH) ---
     useEffect(() => {
         if (role === 'patient') {
-            api.getDoctors().then(data => {
-                setDoctors(data);
-                setFilteredDoctors(data);
-            }).catch(console.error);
+            api.getDoctors().then(setDoctors).catch(console.error);
         }
-    }, [role, myId]);
+    }, [role]);
 
-    // --- 2. FILTROWANIE ---
-    const handleFilterChange = (spec: string) => {
-        setSelectedSpec(spec);
-        if (spec === 'Wszystkie') {
-            setFilteredDoctors(doctors);
-        } else {
-            setFilteredDoctors(doctors.filter(doc => doc.specialization === spec));
-        }
-    };
-
-    // --- 3. LOGIKA KALENDARZA ---
     const getWeekRange = (date: Date) => {
         const start = new Date(date);
         const day = start.getDay() || 7; 
@@ -84,27 +67,11 @@ const Dashboard: React.FC = () => {
         return () => {socket.off('schedule_update')};
     }, [selectedDoctorId, currentDate]);
 
+    // --- HANDLERY ---
     const changeWeek = (direction: number) => {
         const newDate = new Date(currentDate);
         newDate.setDate(newDate.getDate() + (direction * 7));
         setCurrentDate(newDate);
-    };
-
-    // --- 4. HANDLERY ---
-    const handleDoctorSelect = (doctor: Doctor) => {
-        setSelectedDoctorId(doctor.id);
-        setSelectedDoctorName(doctor.name);
-    };
-
-    const handleBackToList = () => {
-        setSelectedDoctorId(null);
-        setSelectedDoctorName(null);
-        setSlots([]); 
-        setShowReviews(false); // Resetujemy widok opinii przy powrocie
-    };
-
-    const handleSlotClick = (slot: Slot) => {
-        if (role === 'patient') setSelectedSlotForBooking(slot);
     };
 
     const handleConfirmBooking = async (slotId: number, formData: ReservationFormData) => {
@@ -119,174 +86,55 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Funkcja renderująca gwiazdki (używana na kafelkach i w przycisku rozwijania)
-    const renderStars = (rating: number, count: number) => {
-        if (!count || count === 0) {
-            return <span style={{ color: '#bdc3c7', fontSize: '0.85rem' }}>Brak opinii</span>;
-        }
-        return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ color: '#f1c40f', fontSize: '1rem' }}>★</span>
-                <span style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '0.9rem' }}>{rating}</span>
-                <span style={{ color: '#7f8c8d', fontSize: '0.8rem' }}>({count})</span>
-            </div>
-        );
-    };
+    // Pomocnik do znalezienia obiektu wybranego lekarza
+    const selectedDoctor = doctors.find(d => d.id == selectedDoctorId);
 
     if (!user) return <div style={{padding: 20}}>Ładowanie...</div>;
-
-    // Pomocnicza zmienna do pobrania danych aktualnie wybranego lekarza (do sekcji dolnej)
-    const currentSelectedDoctor = doctors.find(d => d.id == selectedDoctorId);
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px 10px' }}>
             
-            {/* --- WIDOK PACJENTA: LISTA LEKARZY --- */}
+            {/* WIDOK 1: Lista Lekarzy (tylko dla pacjenta, gdy nikt nie wybrany) */}
             {role === 'patient' && !selectedDoctorId && (
-                <div>
-                    {/* FILTRY */}
-                    <div style={styles.filterContainer}>
-                        <button 
-                            onClick={() => handleFilterChange('Wszystkie')}
-                            style={selectedSpec === 'Wszystkie' ? styles.filterBtnActive : styles.filterBtn}
-                        >
-                            Wszystkie
-                        </button>
-                        {SPECIALIZATIONS.map(spec => (
-                            <button 
-                                key={spec}
-                                onClick={() => handleFilterChange(spec)}
-                                style={selectedSpec === spec ? styles.filterBtnActive : styles.filterBtn}
-                            >
-                                {spec}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* GRID LEKARZY */}
-                    <div style={styles.grid}>
-                        {filteredDoctors.map(doctor => (
-                            <div key={doctor.id} style={styles.card}>
-                                <div style={{ padding: '20px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
-                                        <h3 style={{ margin: 0, color: '#2c3e50', fontSize: '1.2rem' }}>
-                                            {doctor.name}
-                                        </h3>
-                                        <div style={{ marginTop: '2px', flexShrink: 0 }}>
-                                            {renderStars(doctor.averageRating || 0, doctor.ratingCount || 0)}
-                                        </div>
-                                    </div>
-                                    
-                                    <div style={styles.badge}>
-                                        {doctor.specialization || "Lekarz Ogólny"}
-                                    </div>
-                                    <p style={{ color: '#7f8c8d', fontSize: '0.9rem', marginTop: '15px' }}>
-                                        Dostępny w systemie online.
-                                    </p>
-                                </div>
-                                <div style={styles.cardFooter}>
-                                    <button onClick={() => handleDoctorSelect(doctor)} style={styles.cardButton}>
-                                        Sprawdź Terminy →
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <PatientDoctorList 
+                    doctors={doctors}
+                    onSelectDoctor={(doc) => setSelectedDoctorId(doc.id)}
+                />
             )}
 
-            {/* --- WIDOK KALENDARZA --- */}
-            {selectedDoctorId && (
-                <div>
-                    {/* NAGŁÓWEK KALENDARZA - CZYSTY (Bez gwiazdek i toggle) */}
-                    <div style={styles.calendarHeader}>
-                        {role === 'patient' && (
-                            <button onClick={handleBackToList} style={styles.backButton}>
-                                ← Lista Lekarzy
-                            </button>
-                        )}
-                        
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <button onClick={() => changeWeek(-1)} style={styles.navButton}>&lt;</button>
-                            <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#2c3e50' }}>
-                                {currentDate.toLocaleDateString()}
-                            </span>
-                            <button onClick={() => changeWeek(1)} style={styles.navButton}>&gt;</button>
-                        </div>
-
-                        {role === 'patient' && (
-                            <div style={{ color: '#7f8c8d', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                Grafik: <span style={styles.doctorNameLabel}>{selectedDoctorName}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* KALENDARZ */}
-                    <div style={styles.calendarWrapper}>
-                        <CalendarView 
-                            slots={slots}
-                            absences={absences}
-                            onSlotClick={handleSlotClick} 
-                            currentDate={currentDate}
-                            myId={myId}
-                            role={role}
-                        />
-                    </div>
-
-                    {/* --- NOWA SEKCJA POD KALENDARZEM: ROZWIJANE OPINIE --- */}
-                    {role === 'patient' && currentSelectedDoctor && (
-                        <div style={{ marginTop: '20px' }}>
-                            {/* Przycisk rozwijania / Pasek podsumowania */}
-                            <button 
-                                onClick={() => setShowReviews(!showReviews)}
-                                style={{
-                                    width: '100%',
-                                    padding: '15px',
-                                    background: 'white',
-                                    border: '1px solid #eee',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    boxShadow: '0 2px 5px rgba(0,0,0,0.02)',
-                                    transition: 'background 0.2s'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = '#f8f9fa'}
-                                onMouseOut={(e) => e.currentTarget.style.background = 'white'}
-                            >
-                                <span style={{ color: '#2c3e50', fontWeight: 'bold', fontSize: '1rem' }}>
-                                    Opinie pacjentów
-                                </span>
-                                
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                    {/* Pokazujemy gwiazdki na pasku, żeby zachęcić do kliknięcia */}
-                                    {renderStars(currentSelectedDoctor.averageRating || 0, currentSelectedDoctor.ratingCount || 0)}
-                                    <span style={{ color: '#3498db', fontSize: '0.9rem' }}>
-                                        {showReviews ? '▲ Zwiń' : '▼ Rozwiń'}
-                                    </span>
-                                </div>
-                            </button>
-
-                            {/* Treść opinii (Komponent) */}
-                            {showReviews && (
-                                <div style={{ marginTop: '10px', animation: 'fadeIn 0.3s' }}>
-                                    <DoctorReviews doctorId={selectedDoctorId} />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+            {/* WIDOK 2: Harmonogram Lekarza (dla pacjenta) */}
+            {role === 'patient' && selectedDoctorId && selectedDoctor && (
+                <PatientSchedule 
+                    doctor={selectedDoctor}
+                    slots={slots}
+                    absences={absences}
+                    currentDate={currentDate}
+                    onChangeWeek={changeWeek}
+                    onBackToList={() => {
+                        setSelectedDoctorId(null);
+                        setSlots([]);
+                    }}
+                    onSlotClick={setSelectedSlotForBooking}
+                    myId={myId}
+                    role={role}
+                />
             )}
 
-            {/* --- PANEL LEKARZA --- */}
+            {/* WIDOK 3: Panel dla Lekarza */}
             {role === 'doctor' && (
                 <div style={{ marginTop: '30px' }}>
+                    <DoctorSchedule 
+                        slots={slots}
+                        absences={absences}
+                        currentDate={currentDate}
+                        onChangeWeek={changeWeek}
+                        myId={myId}
+                    />
                     <DoctorPanel />
                 </div>
             )}
 
-            {/* --- MODAL --- */}
+            {/* MODAL REZERWACJI */}
             {selectedSlotForBooking && (
                 <ReservationModal 
                     slot={selectedSlotForBooking}
@@ -296,62 +144,6 @@ const Dashboard: React.FC = () => {
             )}
         </div>
     );
-};
-
-// Style
-const styles: Record<string, React.CSSProperties> = {
-    filterContainer: {
-        display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '10px', marginBottom: '30px'
-    },
-    filterBtn: {
-        padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-        background: '#ecf0f1', color: '#2c3e50', fontWeight: 'bold', transition: 'all 0.3s'
-    },
-    filterBtnActive: {
-        padding: '8px 16px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-        background: '#2c3e50', color: 'white', fontWeight: 'bold',
-        boxShadow: '0 2px 5px rgba(44, 62, 80, 0.3)', transform: 'scale(1.05)'
-    },
-    grid: {
-        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px'
-    },
-    card: {
-        background: 'white', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-        overflow: 'hidden', border: '1px solid #eee', display: 'flex', flexDirection: 'column',
-        justifyContent: 'space-between', transition: 'transform 0.2s'
-    },
-    badge: {
-        display: 'inline-block', background: '#e1f5fe', color: '#0288d1',       
-        padding: '5px 12px', borderRadius: '15px', fontSize: '0.85rem', fontWeight: 'bold'
-    },
-    cardFooter: {
-        background: '#f8f9fa', padding: '15px', borderTop: '1px solid #eee', textAlign: 'center'
-    },
-    cardButton: {
-        background: 'transparent', border: 'none', color: '#3498db', fontWeight: 'bold',
-        fontSize: '1rem', cursor: 'pointer', padding: '5px'
-    },
-    calendarHeader: {
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px',
-        background: 'white', padding: '15px 25px', borderRadius: '12px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #eee'
-    },
-    navButton: {
-        background: '#f1f2f6', border: 'none', padding: '8px 15px', borderRadius: '6px',
-        cursor: 'pointer', fontWeight: 'bold', color: '#2c3e50', fontSize: '1.1rem'
-    },
-    backButton: {
-        background: 'transparent', border: '1px solid #bdc3c7', color: '#7f8c8d',
-        padding: '8px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem', fontWeight: '500'
-    },
-    doctorNameLabel: {
-        background: '#e1f5fe', color: '#0288d1', padding: '4px 10px', borderRadius: '4px',
-        fontWeight: 'bold', fontSize: '0.9rem'
-    },
-    calendarWrapper: {
-        background: 'white', padding: '20px', borderRadius: '12px',
-        boxShadow: '0 5px 15px rgba(0,0,0,0.05)', border: '1px solid #eee'
-    }
 };
 
 export default Dashboard;

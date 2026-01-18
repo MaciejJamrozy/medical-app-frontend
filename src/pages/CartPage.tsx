@@ -3,6 +3,10 @@ import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import type { CartItem } from '../types';
 
+// Import nowych komponentów
+import CartTable from '../components/cart/CartTable';
+import CartSummary from '../components/cart/CartSummary';
+
 const CartPage: React.FC = () => {
     const [cartItems, setCartItems] = useState<CartItem[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
@@ -24,12 +28,12 @@ const CartPage: React.FC = () => {
         loadCart();
     }, []);
 
-
     const handleRemove = async (slotId: number) => {
         if (!window.confirm("Usunąć z koszyka?")) return;
         try {
             await api.removeFromCart(slotId);
-            loadCart(); // Odśwież listę
+            // Optymistyczna aktualizacja (szybsza niż reload)
+            setCartItems(prev => prev.filter(item => item.slotId !== slotId));
         } catch (err: unknown) {
             const error = err as Error;
             alert(error.message || "Błąd usuwania");
@@ -47,59 +51,23 @@ const CartPage: React.FC = () => {
         }
     };
 
-    if (loading) return <p>Ładowanie koszyka...</p>;
+    if (loading) return <div style={{ padding: '40px', textAlign: 'center' }}>Ładowanie koszyka...</div>;
 
     return (
-        <div className="container" style={{ maxWidth: '800px', margin: '20px auto', padding: '20px' }}>
-            <h2>Twój Koszyk</h2>
+        <div style={{ maxWidth: '800px', margin: '20px auto', padding: '20px', fontFamily: "'Segoe UI', sans-serif" }}>
+            <h2 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', color: '#2c3e50' }}>
+                Twój Koszyk
+            </h2>
 
-            {cartItems.length === 0 ? (
-                <p>Koszyk jest pusty. Wybierz termin w kalendarzu.</p>
-            ) : (
-                <div style={{ marginTop: '20px' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ background: '#eee', textAlign: 'left' }}>
-                                <th style={{ padding: '10px' }}>Lekarz</th>
-                                <th>Data</th>
-                                <th>Godzina</th>
-                                <th>Akcja</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {cartItems.map(item => (
-                                <tr key={item.slotId} style={{ borderBottom: '1px solid #ddd' }}>
-                                    <td style={{ padding: '10px' }}>
-                                        {item.Slot?.Doctor?.name || 'Lekarz'} 
-                                        <small> ({item.Slot?.Doctor?.specialization})</small>
-                                    </td>
-                                    <td>{item.Slot?.date}</td>
-                                    <td>{item.Slot?.time}</td>
-                                    <td>
-                                        <button 
-                                            onClick={() => handleRemove(item.slotId)}
-                                            style={{ background: '#ff4d4f', color: 'white', border: 'none', padding: '5px 10px', cursor: 'pointer', borderRadius: '4px' }}
-                                        >
-                                            Usuń
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            <CartTable 
+                items={cartItems} 
+                onRemove={handleRemove} 
+            />
 
-                    <div style={{ marginTop: '30px', textAlign: 'right' }}>
-                        <h3>Podsumowanie</h3>
-                        <p>Liczba wizyt: {cartItems.length}</p>
-                        <button 
-                            onClick={handleCheckout}
-                            style={{ padding: '10px 20px', fontSize: '16px', background: '#28a745', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '6px' }}
-                        >
-                            Potwierdzam z obowiązkiem zapłaty
-                        </button>
-                    </div>
-                </div>
-            )}
+            <CartSummary 
+                count={cartItems.length} 
+                onCheckout={handleCheckout} 
+            />
         </div>
     );
 };
