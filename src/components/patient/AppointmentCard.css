@@ -1,0 +1,88 @@
+/* --- KARTA WIZYTY (AppointmentCard) --- */
+
+.appointment-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  /* Ważne: border-left jest nadawany dynamicznie w React (kolory), 
+     ale tutaj ustawiamy bazę */
+  border: 1px solid #eee; 
+  border-left-width: 5px; 
+}
+
+.appointment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Sekcja z datą */
+.app-date-box {
+  min-width: 100px;
+  text-align: center;
+  padding-right: 20px;
+  border-right: 1px solid #eee; /* Kreska pionowa na Desktopie */
+}
+
+/* Sekcja z info o lekarzu */
+.app-info-box {
+  flex: 1; /* Zajmij dostępną przestrzeń */
+  min-width: 200px;
+}
+
+/* Sekcja z przyciskami (Akcje) */
+.app-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end; /* Na desktopie do prawej */
+  gap: 10px;
+  min-width: 150px;
+}
+
+/* Style przycisków i badgy */
+.badge-success { background: #def7ec; color: #03543f; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+.badge-history { background: #f1f2f6; color: #7f8c8d; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+.badge-error { background: #fde8e8; color: #9b1c1c; padding: 4px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+
+.btn-rate { background: #f1c40f; color: #744210; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: background 0.2s; }
+.btn-rate:hover { background: #d4ac0d; }
+
+.btn-abort { background: white; border: 1px solid #e74c3c; color: #e74c3c; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background 0.2s; }
+.btn-abort:hover { background: #fff5f5; }
+
+
+/* --- MEDIA QUERY (Mobile) --- */
+@media (max-width: 600px) {
+  .appointment-card {
+    flex-direction: column; /* Układaj elementy jeden pod drugim */
+    align-items: stretch;   /* Rozciągnij na całą szerokość */
+    text-align: center;     /* Wyśrodkuj tekst */
+    gap: 15px;
+  }
+
+  .app-date-box {
+    border-right: none;      /* Usuń kreskę z boku */
+    border-bottom: 1px solid #eee; /* Dodaj kreskę na dole */
+    padding-right: 0;
+    padding-bottom: 15px;
+    margin-bottom: 5px;
+    width: 100%;
+  }
+
+  .app-actions {
+    align-items: center; /* Wyśrodkuj przyciski */
+    width: 100%;
+  }
+  
+  /* Powiększ przyciski dla łatwiejszego klikania */
+  .btn-rate, .btn-abort {
+    width: 100%;
+    padding: 10px;
+  }
+}

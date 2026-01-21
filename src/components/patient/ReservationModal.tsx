@@ -21,10 +21,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
 
     if (!slot) return null;
     
-    // Obsługa wyboru pliku
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            // Konwertujemy FileList na zwykłą tablicę
             setFormData({ ...formData, attachments: Array.from(e.target.files) });
         }
     };
@@ -59,7 +57,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
                         <small style={{ color: '#666' }}>System sprawdzi dostępność kolejnych slotów.</small>
                     </div>
 
-                    {/* 2. Typ konsultacji */}
+                    {/*  Typ konsultacji */}
                     <div style={{ marginBottom: '10px' }}>
                         <label>Typ wizyty:</label>
                         <select 
@@ -74,7 +72,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
                         </select>
                     </div>
 
-                    {/* 3. Dane pacjenta */}
+                    {/* Dane pacjenta */}
                     <div style={{ marginBottom: '10px' }}>
                         <label>Imię i Nazwisko:</label>
                         <input 
@@ -112,12 +110,11 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
                         </div>
                     </div>
 
-                    {/* Input na pliki */}
                     <div style={{ marginBottom: '15px' }}>
-                        <label>Wyniki badań (możesz wybrać kilka):</label>
+                        <label>Wyniki badań (max. 5):</label>
                         <input 
                             type="file" 
-                            multiple  // <--- DODAJEMY ATTRYBUT MULTIPLE
+                            multiple
                             accept=".pdf,.jpg,.png,.doc,.docx"
                             onChange={handleFileChange}
                             style={{ marginTop: '5px' }}
@@ -125,7 +122,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({ slot, onClose, onCo
                         <small>Wybrano plików: {formData.attachments?.length || 0}</small>
                     </div>
 
-                    {/* 4. Notatki */}
                     <div style={{ marginBottom: '15px' }}>
                         <label>Informacje dla lekarza:</label>
                         <textarea 

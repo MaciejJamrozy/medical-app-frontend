@@ -3,12 +3,10 @@ import { api, socket } from '../services/api';
 import type { Slot, Rating } from '../types';
 import { AxiosError } from 'axios';
 
-// Import nowych komponentów
 import RatingForm from '../components/patient/RatingForm';
 import AppointmentsList from '../components/patient/AppointmentsList';
 
 const AppointmentsPage: React.FC = () => {
-    // --- STAN ---
     const [appointments, setAppointments] = useState<Slot[]>([]);
     const [ratedDoctors, setRatedDoctors] = useState<Set<number>>(new Set());
     const [ratingDoctorId, setRatingDoctorId] = useState<number | null>(null);
@@ -16,7 +14,6 @@ const AppointmentsPage: React.FC = () => {
 
     const isBanned = localStorage.getItem('isBanned') === 'true'; 
 
-    // --- FETCH DATA ---
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -42,7 +39,6 @@ const AppointmentsPage: React.FC = () => {
         return () => { socket.off('schedule_update', handleSocketUpdate); };
     }, [refreshTrigger]);
 
-    // --- LOGIKA SORTOWANIA ---
     const isPast = (dateStr: string, timeStr: string) => {
         return new Date(`${dateStr}T${timeStr}`) < new Date();
     };
@@ -55,7 +51,6 @@ const AppointmentsPage: React.FC = () => {
         .filter(app => isPast(app.date, app.time))
         .sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
 
-    // --- HANDLERY ---
     const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
 
     const handleRateClick = (doctorId: number) => {
@@ -103,7 +98,7 @@ const AppointmentsPage: React.FC = () => {
                 </div>
             )}
 
-            {/* FORMULARZ OCENY (WYŚWIETLANY WARUNKOWO) */}
+            {/* FORMULARZ OCENY */}
             {ratingDoctorId && (
                 <RatingForm 
                     onSubmit={handleSubmitRating}
@@ -113,7 +108,7 @@ const AppointmentsPage: React.FC = () => {
 
             {/* SEKCJA 1: NADCHODZĄCE */}
             <AppointmentsList 
-                title="Nadchodzące wizyty"
+                title="Przyszłe wizyty"
                 appointments={upcomingAppointments}
                 isHistory={false}
                 isBanned={isBanned}
@@ -132,7 +127,7 @@ const AppointmentsPage: React.FC = () => {
                 ratedDoctors={ratedDoctors}
                 onRate={handleRateClick}
                 onCancel={handleCancelClick}
-                headerColor="#7f8c8d" // #bdc3c7 w oryginale, ale to podobny szary
+                headerColor="#7f8c8d"
             />
         </div>
     );

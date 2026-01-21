@@ -9,10 +9,8 @@ import type {
 
 const API_URL = 'http://localhost:5001/api';
 
-// Socket z typem
 export const socket: Socket = io("http://localhost:5001");
 
-// --- Auth Manager Variables ---
 let memoryToken: string | null = null;
 let memoryRefreshToken: string | null = null;
 let memoryRole: string | null = null;
@@ -33,7 +31,6 @@ export const authManager = {
         if (mode === 'NONE') localStorage.setItem('auth_preference', 'NONE'); 
         else localStorage.setItem('auth_preference', mode);
 
-        // Czyścimy wszystko
         ['token', 'refreshToken', 'role', 'name', 'username'].forEach(key => {
             localStorage.removeItem(key);
             sessionStorage.removeItem(key);
@@ -195,15 +192,11 @@ export const api = {
             formData.append('startSlotId', String(slotId));
             formData.append('duration', String(duration));
             
-            // Wyciągamy attachments, reszta to JSON
             const { attachments, ...restDetails } = details;
             formData.append('details', JSON.stringify(restDetails));
 
-            // ZMIANA: Pętla dodająca pliki
             if (attachments && attachments.length > 0) {
                 attachments.forEach((file) => {
-                    // WAŻNE: Używamy tej samej nazwy 'files' dla każdego pliku!
-                    // To pozwoli Multerowi (upload.array('files')) je odebrać.
                     formData.append('files', file); 
                 });
             }

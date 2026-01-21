@@ -11,7 +11,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f4f7f6; /* Jasnoszare tło - standard w systemach admin */
+  background-color: #f4f7f6;
   color: #333;
 }
 
@@ -20,13 +20,11 @@ code {
     monospace;
 }
 
-/* Podstawowe style formularzy - przydadzą się wszędzie */
 input, select, button {
   font-family: inherit;
   font-size: 1rem;
 }
 
-/* Klasy pomocnicze */
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -38,13 +36,28 @@ h1, h2, h3 {
   margin-bottom: 1rem;
 }
 
-/* --- KALENDARZ MACIERZOWY --- */
+/* --- KALENDARZ --- */
 
 .calendar-container {
-  display: flex;
-  flex-direction: column;
-  max-width: 1000px;
-  margin: 0 auto;
+  /* Zmieniamy display: flex na block, żeby kontener nie próbował rosnąć z zawartością */
+  display: block; 
+  
+  /* To sprawia, że białe tło nie wyjdzie poza ekran telefonu */
+  width: 100%;
+  max-width: 100%; 
+  
+  /* Mechanizm przewijania */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  /* Wygląd */
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  margin: 0 auto 30px auto; /* Centrowanie i odstęp od dołu */
+  
+  /* Opcjonalne: padding wewnątrz białego pudełka */
+  padding-bottom: 5px; 
 }
 
 .calendar-header {
@@ -52,36 +65,105 @@ h1, h2, h3 {
   justify-content: space-between;
   margin-bottom: 20px;
   align-items: center;
+
+  /* NOWE: Pozwala elementom spaść do nowej linii, jeśli się nie mieszczą */
+  flex-wrap: wrap; 
+  gap: 15px; /* Odstęp między elementami po zawinięciu */
 }
 
-/* Siatka dni (Nagłówki kolumn) */
+/* NOWE: Specjalny styl dla nagłówka na telefonach */
+@media (max-width: 600px) {
+  .calendar-header {
+    flex-direction: column; /* Układ pionowy: Tytuł nad przyciskami */
+    align-items: stretch;   /* Rozciągnij elementy na szerokość */
+    text-align: center;
+  }
+
+  .calendar-header h2, 
+  .calendar-header h3,
+  .calendar-header span { 
+    display: none; 
+  }
+
+  /* Jeśli w nagłówku są przyciski (np. <button>), niech będą szerokie */
+  .calendar-header button {
+    width: 100%;
+    margin-bottom: 5px;
+    padding: 10px; /* Łatwiejsze klikanie palcem */
+  }
+
+  /* Jeśli w nagłówku jest data/tytuł (np. <h2> lub <div>) */
+  .calendar-header h2, 
+  .calendar-header h3, 
+  .calendar-header div {
+    margin-bottom: 10px;
+    font-size: 1.2rem; /* Trochę mniejsza czcionka na mobile */
+  }
+}
+
+/* Siatka dni */
 .calendar-grid-header {
   display: grid;
-  grid-template-columns: 60px repeat(7, 1fr); /* 60px na godziny + 7 dni */
+  /* Zachowujemy ten sam układ kolumn */
+  grid-template-columns: 60px repeat(7, 1fr);
   gap: 1px;
-  background-color: #ddd;
-  border-bottom: 2px solid #ccc;
+  min-width: 800px;
+  
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dde2e5;
   font-weight: bold;
   text-align: center;
+  
+  /* Przyklejenie nagłówka przy przewijaniu w dół */
+  position: sticky;
+  top: 0;
+  z-index: 5;
+
+  /* --- POPRAWKA WYSTAJĄCYCH NAGŁÓWKÓW --- */
+  /* Rezerwujemy miejsce na pasek przewijania, takie samo jak ma body */
+  /* Dzięki temu kolumny będą idealnie równe */
+  overflow-y: scroll;     /* Wymusza istnienie "mechanizmu" przewijania */
+  scrollbar-width: none;  /* Firefox: ukrywa pasek, ale zachowuje miejsce (jeśli gutter nie zadziała) */
+  scrollbar-gutter: stable; /* Nowoczesne: rezerwuje miejsce na scrollbar zawsze */
 }
+
+/* Ukrycie paska przewijania w nagłówku dla Chrome/Safari/Edge */
+.calendar-grid-header::-webkit-scrollbar {
+  display: none;        /* Pasek jest niewidoczny */
+  width: 0;             /* Szerokość 0, ale padding/gutter trzyma miejsce */
+  background: transparent; 
+}
+
+/* Jeśli powyższe nie zadziała idealnie na starszych systemach, 
+   możesz odkomentować to (sztywny padding): */
+/* .calendar-grid-header {
+   padding-right: 17px; 
+} 
+*/
 
 .header-cell {
   background-color: #f4f4f4;
   padding: 10px 0;
 }
 
-/* Siatka główna (Body) */
+/* Siatka główna */
 .calendar-grid-body {
   display: grid;
   grid-template-columns: 60px repeat(7, 1fr);
   gap: 1px;
-  background-color: #eee; /* Kolor linii siatki */
+  min-width: 800px;
+  
+  background-color: #eee;
   border: 1px solid #ccc;
-  height: 500px; /* Wysokość kalendarza ze scrollem */
-  overflow-y: auto;
+  
+  /* Tu jest scrollbar, który powodował problem */
+  height: 500px;
+  overflow-y: scroll; /* Wymuszamy, by scrollbar był zawsze (nawet nieaktywny), co stabilizuje widok */
+  overflow-x: hidden; 
+  
+  scrollbar-gutter: stable; /* Synchronizacja z nagłówkiem */
 }
 
-/* Kolumna z godzinami (lewa strona) */
 .time-label {
   background-color: #fff;
   color: #666;
@@ -130,4 +212,127 @@ h1, h2, h3 {
   border: 1px solid #d69e2e;
   margin: 2px;
   border-radius: 4px;
+}
+
+/* --- RESPONSYWNY NAVBAR --- */
+
+/* Styl bazowy (Desktop) */
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  height: 60px;
+}
+
+.desktop-menu {
+  display: flex; /* Na komputerze linki są widoczne */
+  gap: 20px;
+  align-items: center;
+}
+
+.mobile-toggle {
+  display: none; /* Na komputerze ukrywamy przycisk Hamburgera */
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+/* Styl Mobilny (Telefony i Tablety < 768px) */
+@media (max-width: 768px) {
+  .desktop-menu {
+    display: none; /* Na telefonie ukrywamy zwykłe linki */
+  }
+
+  .mobile-toggle {
+    display: block; /* Pokazujemy Hamburgera */
+  }
+
+  /* Rozwijane menu */
+  .mobile-menu-dropdown {
+    position: absolute;
+    top: 60px; /* Wysokość navbara */
+    left: 0;
+    width: 100%;
+    background-color: #2c3e50; /* Ten sam kolor co navbar */
+    flex-direction: column;
+    padding: 20px;
+    border-top: 1px solid #34495e;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 1000;
+    display: flex;
+    gap: 15px;
+  }
+}
+
+/* --- WSPÓLNE STYLE HARMONOGRAMU --- */
+
+/* Wrapper na cały kalendarz (białe tło, cień) */
+.schedule-wrapper {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+}
+
+/* Przyciski nawigacji (< >) */
+.nav-btn {
+  background: #f1f2f6;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  transition: background 0.2s;
+}
+.nav-btn:hover {
+  background-color: #e2e6ea;
+}
+
+/* Przycisk powrotu (tylko pacjent) */
+.back-btn {
+  background: transparent;
+  border: 1px solid #bdc3c7;
+  color: #7f8c8d;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.back-btn:hover {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+}
+
+/* Etykieta z nazwiskiem lekarza */
+.doctor-label {
+  background: #e1f5fe;
+  color: #0288d1;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.9rem;
+  white-space: nowrap; /* Nie łam nazwiska */
+}
+
+/* Data w nagłówku */
+.current-date-label {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+/* Na telefonach zmniejszamy padding w kontenerze */
+@media (max-width: 600px) {
+  .schedule-wrapper {
+    padding: 10px;
+  }
 }
