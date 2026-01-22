@@ -14,7 +14,7 @@ const SingleScheduleForm: React.FC = () => {
         try {
             await api.addAvailability(singleData as AvailabilityData);
             alert("Dodano dostępność jednorazową!");
-            setSingleData({ ...singleData, date: '' }); // Reset daty po dodaniu
+            setSingleData({ ...singleData, date: '' });
         } catch (err: unknown) { 
             const error = err as Error;
             alert(error.message); 

@@ -1,0 +1,63 @@
+{
+  "slots": [
+    {
+      "id": 1,
+      "doctorId": 10,
+      "date": "2026-01-21",
+      "time": "09:00",
+      "status": "booked",
+      "visitType": "Konsultacja kardiologiczna",
+      "patientId": 100,
+      "patientName": "Jan Kowalski",
+      "patientNotes": "Ból w klatce piersiowej"
+    },
+    {
+      "id": 2,
+      "doctorId": 10,
+      "date": "2026-01-21",
+      "time": "09:30",
+      "status": "free",
+      "patientId": null
+    },
+    {
+      "id": 3,
+      "doctorId": 10,
+      "date": "2026-01-22",
+      "time": "10:00",
+      "status": "cancelled",
+      "patientId": null
+    },
+    {
+      "id": 4,
+      "doctorId": 20,
+      "date": "2026-01-21",
+      "time": "11:00",
+      "status": "free",
+      "patientId": null
+    }
+  ],
+  "doctors": [
+    {
+      "id": 10,
+      "name": "Dr Anna Nowak",
+      "specialization": "Kardiolog",
+      "ratingCount": 15,
+      "averageRating": 4.8
+    },
+    {
+      "id": 20,
+      "name": "Dr Piotr Zieliński",
+      "specialization": "Dermatolog",
+      "ratingCount": 5,
+      "averageRating": 3.5
+    }
+  ],
+  "users": [
+    {
+      "id": 100,
+      "username": "jan_kowalski",
+      "name": "Jan Kowalski",
+      "role": "patient"
+    }
+  ]
+}

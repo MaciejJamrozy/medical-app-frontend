@@ -4,7 +4,7 @@ import { SPECIALIZATIONS } from '../../utils/specializations';
 import type { CreateDoctorData } from '../../types';
 
 interface AdminAddDoctorProps {
-    onDoctorAdded: () => void; // Callback do odświeżenia listy
+    onDoctorAdded: () => void;
 }
 
 const AdminAddDoctor: React.FC<AdminAddDoctorProps> = ({ onDoctorAdded }) => {
@@ -18,7 +18,7 @@ const AdminAddDoctor: React.FC<AdminAddDoctorProps> = ({ onDoctorAdded }) => {
             await api.createDoctor(doctorForm);
             alert("Lekarz dodany!");
             setDoctorForm({ name: '', username: '', password: '', specialization: '' });
-            onDoctorAdded(); // Wywołujemy odświeżenie w rodzicu
+            onDoctorAdded();
         } catch (err: unknown) {
             const error = err as Error;
             alert("Błąd: " + error.message);

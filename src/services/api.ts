@@ -9,10 +9,11 @@ import type {
 
 const API_URL = 'http://localhost:5001/api';
 
-export const socket: Socket = io("http://localhost:5001");
+export const socket: Socket = io("http://localhost:5001", {
+    withCredentials: true
+});
 
 let memoryToken: string | null = null;
-let memoryRefreshToken: string | null = null;
 let memoryRole: string | null = null;
 let memoryName: string | null = null;
 let memoryUsername: string | null = null;
@@ -37,7 +38,6 @@ export const authManager = {
         });
         
         memoryToken = null;
-        memoryRefreshToken = null;
         memoryRole = null;
         memoryName = null;
         memoryUsername = null;
@@ -46,13 +46,11 @@ export const authManager = {
 
         if (storage) {
             storage.setItem('token', data.accessToken);
-            storage.setItem('refreshToken', data.refreshToken);
             storage.setItem('role', data.role);
             if (data.name) storage.setItem('name', data.name);
             if (data.username) storage.setItem('username', data.username);
         } else {
             memoryToken = data.accessToken;
-            memoryRefreshToken = data.refreshToken;
             memoryRole = data.role;
             memoryName = data.name;
             memoryUsername = data.username;
@@ -64,13 +62,6 @@ export const authManager = {
         if (mode === 'LOCAL') return localStorage.getItem('token');
         if (mode === 'SESSION') return sessionStorage.getItem('token');
         return memoryToken; 
-    },
-
-    getRefreshToken: (): string | null => {
-        const mode = getStorageMode();
-        if (mode === 'LOCAL') return localStorage.getItem('refreshToken');
-        if (mode === 'SESSION') return sessionStorage.getItem('refreshToken');
-        return memoryRefreshToken;
     },
 
     getRole: (): string | null => {
@@ -99,13 +90,14 @@ export const authManager = {
             localStorage.removeItem(key);
             sessionStorage.clear();
         });
-        memoryToken = null; memoryRefreshToken = null; memoryRole = null; memoryName = null; memoryUsername = null;
+        memoryToken = null; memoryRole = null; memoryName = null; memoryUsername = null;
     }
 };
 
 // --- AXIOS CONFIG ---
 const apiInstance = axios.create({
     baseURL: API_URL,
+    withCredentials: true,
     headers: { 'Content-Type': 'application/json' }
 });
 
@@ -124,16 +116,14 @@ apiInstance.interceptors.response.use(
 
         if (error.response?.status === 403 && !originalRequest._retry) {
             originalRequest._retry = true;
-            const refreshToken = authManager.getRefreshToken();
             
-            if (!refreshToken) {
-                authManager.clearAuth();
-                window.location.href = '/login';
-                return Promise.reject(error);
-            }
-
             try {
-                const response = await axios.post(`${API_URL}/auth/refresh`, { token: refreshToken });
+                const response = await axios.post(
+                    `${API_URL}/auth/refresh`, 
+                    {}, 
+                    { withCredentials: true } 
+                );
+                
                 const { accessToken } = response.data;
 
                 const currentMode = getStorageMode();
@@ -146,6 +136,9 @@ apiInstance.interceptors.response.use(
 
             } catch (refreshError) {
                 authManager.clearAuth();
+                try { await axios.post(`${API_URL}/auth/logout`, {}, { withCredentials: true }); } catch { // ignore
+                }
+                
                 window.location.href = '/login';
                 return Promise.reject(refreshError);
             }
@@ -156,16 +149,13 @@ apiInstance.interceptors.response.use(
     }
 );
 
-// --- API METHODS ---
 export const api = {
     // Auth
     login: (credentials: LoginCredentials) => apiInstance.post<AuthResponse>('/auth/login', credentials),
     register: (userData: RegisterData) => apiInstance.post('/auth/register', userData),
     getAuthSettings: () => apiInstance.get<{ mode: AuthMode }>('/auth/settings'),
-    logout: () => {
-        const token = authManager.getRefreshToken();
-        return apiInstance.post('/auth/logout', { token });
-    },
+    
+    logout: () => apiInstance.post('/auth/logout'),
 
     // Admin
     getAllUsers: () => apiInstance.get<User[]>('/admin/users').then(res => res.data),
@@ -175,7 +165,7 @@ export const api = {
     deleteRating: (id: number) => apiInstance.delete(`/admin/ratings/${id}`),
     updateAuthMode: (mode: AuthMode) => apiInstance.post('/admin/settings/auth-mode', { mode }),
 
-    // Lekarz
+    // Doctor / Patient
     getDoctors: () => apiInstance.get<Doctor[]>('/doctors').then(res => res.data),
     getSchedule: (doctorId: number | string, from: string, to: string) => 
         apiInstance.get<Slot[]>(`/doctor/schedule?doctorId=${doctorId}&from=${from}&to=${to}`).then(res => res.data),
@@ -185,22 +175,17 @@ export const api = {
     addAbsence: (data: Absence) => apiInstance.post('/doctor/absence', data).then(res => res.data),
     getDoctorAbsences: (doctorId: number | string) => apiInstance.get<Absence[]>(`/doctor/${doctorId}/absences`).then(res => res.data),
 
-    // Pacjent
     addToCart: (slotId: number, duration: number, details: ReservationFormData) => {
             const formData = new FormData();
-            
             formData.append('startSlotId', String(slotId));
             formData.append('duration', String(duration));
-            
             const { attachments, ...restDetails } = details;
             formData.append('details', JSON.stringify(restDetails));
-
             if (attachments && attachments.length > 0) {
                 attachments.forEach((file) => {
                     formData.append('files', file); 
                 });
             }
-
             return apiInstance.post('/cart/add', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
@@ -213,7 +198,6 @@ export const api = {
     getMyAppointments: () => apiInstance.get<Slot[]>('/appointments/my').then(res => res.data),
     cancelAppointment: (slotId: number) => apiInstance.post(`/appointments/${slotId}/cancel`),
     
-    // Oceny
     addRating: (data: { doctorId: number; stars: number; comment: string }) => apiInstance.post('/ratings', data),
     getDoctorRatings: (doctorId: number | string) => apiInstance.get<Rating[]>(`/doctors/${doctorId}/ratings`).then(res => res.data),
 };

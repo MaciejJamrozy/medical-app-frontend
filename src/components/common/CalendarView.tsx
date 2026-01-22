@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Slot, Absence, UserRole } from '../../types';
 
-// --- STYLES & HELPERS ---
-
 const HOURS: string[] = [];
 for (let h = 6; h < 22; h++) {
     HOURS.push(`${String(h).padStart(2, '0')}:00`);
@@ -57,14 +55,12 @@ const VISIT_COLORS: Record<string, string> = {
     'default': '#718096'
 };
 
-// --- KOMPONENT ---
-
 interface CalendarViewProps {
     slots: Slot[];
     absences: Absence[];
     onSlotClick: (slot: Slot) => void;
     currentDate: Date;
-    role: UserRole | null; // null jeśli niezalogowany (gość)
+    role: UserRole | null;
     myId: string | null;
 }
 
@@ -115,7 +111,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>, slot: Slot | undefined) => {
         if (role !== 'doctor') return;
         if (!slot || slot.status !== 'booked') return;
-        const rect = e.currentTarget.getBoundingClientRect(); // używamy currentTarget dla pewności
+        const rect = e.currentTarget.getBoundingClientRect();
         setTooltipPos({ x: rect.right + 10, y: rect.top });
         setHoveredSlot(slot);
     };
@@ -191,7 +187,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                             const isNow = isCurrentTimeSlot(day.dateStr, time);
                             const timeLabel = getSlotTimeRange(time);
 
-                            // BAZOWE STYLE
                             let cellBackground = day.isToday ? '#f7fafc' : 'white';
                             if (absence) cellBackground = '#ffebee';
 
@@ -201,7 +196,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                 position: 'relative',
                             } : {};
 
-                            // 1. NIEOBECNOŚĆ / ODWOŁANE
                             if (absence) return <div key={`${day.dateStr}-${time}`} className="calendar-cell" style={{ background: '#ffebee', cursor: 'not-allowed' }} />;
                             
                             if (slot && slot.status === 'cancelled') {
@@ -216,23 +210,19 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                 }
                             }
 
-                            // 2. SLOTY
                             let slotClass = '';
                             let content: React.ReactNode = '';
                             let style: React.CSSProperties = { background: cellBackground, ...nowMarkerStyle };
 
                             if (slot) {
-                                // Lekarz widzi 'pending' jako 'free'
                                 const isEffectivelyFree = slot.status === 'free' || (slot.status === 'pending' && role === 'doctor');
 
                                 if (isEffectivelyFree) {
-                                    // A. PRZESZŁE WOLNE
                                     if (past) {
                                         style.cursor = 'default';
                                         style.background = cellBackground; 
                                         content = ''; 
                                     } 
-                                    // B. PRZYSZŁE WOLNE
                                     else {
                                         slotClass = 'slot-free'; 
                                         content = timeLabel; 
@@ -243,7 +233,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                         style.display = 'flex'; style.alignItems = 'center'; style.justifyContent = 'center';
 
                                         if (role === 'patient') {
-                                            // Pacjent klika
+                                            // click
                                         } else {
                                             style.cursor = 'default';
                                         }
@@ -251,14 +241,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
                                 } 
                                 else if (slot.status === 'booked' || slot.status === 'pending') {
                                     if (role === 'patient') {
-                                        // PACJENT: Zajęte wizyty mają być niewidoczne
                                         slotClass = ''; 
                                         style.background = cellBackground; 
                                         style.cursor = 'default';
                                         content = ''; 
                                     } 
                                     else {
-                                        // LEKARZ: Widzi detale
                                         slotClass = 'slot-booked';
                                         if (slot.status === 'booked') {
                                             content = timeLabel;

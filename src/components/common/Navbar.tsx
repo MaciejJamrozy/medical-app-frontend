@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext'; // Upewnij się, że ścieżka do context jest dobra
+import { useAuth } from '../../context/AuthContext';
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -13,10 +13,8 @@ const Navbar: React.FC = () => {
     navigate('/login');
   };
 
-  // Zamyka menu po kliknięciu w link (żeby nie zasłaniało ekranu)
   const closeMenu = () => setIsMenuOpen(false);
 
-  // Wspólna lista linków (żeby nie pisać 2 razy tego samego)
   const renderLinks = (isMobile: boolean) => (
     <>
       {!isAuthenticated && (
@@ -61,23 +59,19 @@ const Navbar: React.FC = () => {
   return (
     <nav style={{ background: '#2c3e50', color: 'white', position: 'relative' }}>
       <div className="navbar-container">
-        {/* LOGO */}
         <Link to="/" style={{ fontWeight: 'bold', fontSize: '1.4rem', color: 'white', textDecoration: 'none' }}>
           PrimoMed
         </Link>
 
-        {/* PRZYCISK HAMBURGER (Widoczny tylko na mobile dzięki CSS) */}
         <button className="mobile-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           {isMenuOpen ? '✕' : '☰'}
         </button>
 
-        {/* MENU DESKTOPOWE (Ukryte na mobile dzięki CSS) */}
         <div className="desktop-menu">
             {renderLinks(false)}
         </div>
       </div>
 
-      {/* MENU MOBILNE (Widoczne po kliknięciu) */}
       {isMenuOpen && (
         <div className="mobile-menu-dropdown">
             {renderLinks(true)}
@@ -87,7 +81,6 @@ const Navbar: React.FC = () => {
   );
 };
 
-// Style inline dla elementów (layout jest w CSS, wygląd tutaj)
 const styles: Record<string, React.CSSProperties> = {
     link: { color: 'white', textDecoration: 'none', fontWeight: '500' },
     registerBtn: { background: '#3498db', padding: '8px 20px', borderRadius: '20px' },

@@ -17,7 +17,6 @@ export interface User {
 // 3. Odpowiedź z logowania (Auth)
 export interface AuthResponse {
     accessToken: string;
-    refreshToken: string;
     role: UserRole;
     id: number;
     name: string;

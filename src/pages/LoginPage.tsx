@@ -29,7 +29,6 @@ const LoginPage: React.FC = () => {
 
             login({
                 accessToken: tokenToSave,
-                refreshToken: data.refreshToken,
                 role: data.role,
                 id: data.id,
                 name: data.name,

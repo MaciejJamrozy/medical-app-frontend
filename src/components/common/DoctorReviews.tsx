@@ -9,8 +9,6 @@ interface DoctorReviewsProps {
 const DoctorReviews: React.FC<DoctorReviewsProps> = ({ doctorId }) => {
     const [reviews, setReviews] = useState<Rating[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
-    
-    // 1. NOWY STAN: Czy sekcja jest rozwinięta? (Domyślnie false - zwinięta)
     const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
     useEffect(() => {
@@ -91,21 +89,21 @@ const DoctorReviews: React.FC<DoctorReviewsProps> = ({ doctorId }) => {
 const styles: Record<string, React.CSSProperties> = {
     container: {
         background: '#f8f9fa',
-        padding: '15px 20px', // Zmniejszyłem nieco padding góra/dół
+        padding: '15px 20px',
         borderRadius: '8px',
         marginTop: '20px',
         border: '1px solid #e1e8ed',
         transition: 'all 0.3s'
     },
-    // Styl dla paska nagłówka
+
     headerRow: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         cursor: 'pointer',
-        paddingBottom: '5px' // Odstęp od ewentualnej listy
+        paddingBottom: '5px'
     },
-    // Styl przycisku
+
     toggleBtn: {
         background: 'transparent',
         border: 'none',
@@ -115,13 +113,13 @@ const styles: Record<string, React.CSSProperties> = {
         cursor: 'pointer'
     },
     list: {
-        marginTop: '15px', // Odstęp listy od nagłówka po rozwinięciu
+        marginTop: '15px',
         paddingTop: '15px',
         borderTop: '1px solid #eee',
         maxHeight: '400px',
         overflowY: 'auto',
         paddingRight: '10px',
-        animation: 'fadeIn 0.3s' // Opcjonalna animacja wejścia (jeśli masz zdefiniowane keyframes w CSS)
+        animation: 'fadeIn 0.3s'
     },
     reviewItem: {
         background: 'white',

@@ -8,7 +8,6 @@ interface PublicDoctorCardProps {
 
 const PublicDoctorCard: React.FC<PublicDoctorCardProps> = ({ doctor }) => {
     
-    // Helper wewnątrz komponentu karty
     const renderStars = (rating: number, count: number) => {
         if (!count || count === 0) {
             return <span style={{ color: '#bdc3c7', fontSize: '0.9rem' }}>Brak opinii</span>;
@@ -25,7 +24,6 @@ const PublicDoctorCard: React.FC<PublicDoctorCardProps> = ({ doctor }) => {
     return (
         <div style={styles.card}>
             <div style={{ padding: '20px', flex: 1 }}>
-                {/* Górna sekcja: Imię i Gwiazdki */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '10px' }}>
                     <h3 style={{ margin: 0, color: '#2c3e50' }}>{doctor.name}</h3>
                     <div style={{ marginTop: '2px' }}>

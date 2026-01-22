@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import type { CartItem } from '../types';
-
-// Import nowych komponentów
 import CartTable from '../components/cart/CartTable';
 import CartSummary from '../components/cart/CartSummary';
 
@@ -32,7 +30,6 @@ const CartPage: React.FC = () => {
         if (!window.confirm("Usunąć z koszyka?")) return;
         try {
             await api.removeFromCart(slotId);
-            // Optymistyczna aktualizacja (szybsza niż reload)
             setCartItems(prev => prev.filter(item => item.slotId !== slotId));
         } catch (err: unknown) {
             const error = err as Error;

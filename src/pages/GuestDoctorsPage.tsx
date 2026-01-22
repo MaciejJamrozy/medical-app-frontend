@@ -11,7 +11,6 @@ const GuestDoctorsPage: React.FC = () => {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // 1. Pobieranie danych (tylko raz)
     useEffect(() => {
         const loadDoctors = async () => {
             try {
@@ -27,8 +26,6 @@ const GuestDoctorsPage: React.FC = () => {
         loadDoctors();
     }, []);
 
-    // 2. Filtrowanie "w locie" (zamiast trzymania filteredDoctors w stanie)
-    // To zapobiega błędom synchronizacji i podwójnym renderom.
     const filteredDoctors = useMemo(() => {
         if (selectedSpec === 'Wszystkie') return doctors;
         return doctors.filter(doc => doc.specialization === selectedSpec);
