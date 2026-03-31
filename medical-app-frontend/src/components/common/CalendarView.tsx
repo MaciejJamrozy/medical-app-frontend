@@ -72,10 +72,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
     role, 
     myId 
 }) => {
-    const targetDate = currentDate || new Date();
+    // Sztywna data: 1 kwietnia 2026, godz. 11:00
+    const targetDate = new Date('2026-05-01T11:00:00');
     const days = getDaysOfWeek(targetDate);
+    console.log(currentDate)
     
-    const [now, setNow] = useState(new Date());
+    // Sztywna data: 1 kwietnia 2026, godz. 11:00
+    const [now, setNow] = useState(new Date('2026-05-01T11:00:00'));
 
     useEffect(() => {
         const interval = setInterval(() => setNow(new Date()), 60000);

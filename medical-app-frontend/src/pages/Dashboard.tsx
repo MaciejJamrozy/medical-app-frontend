@@ -27,7 +27,10 @@ const Dashboard: React.FC = () => {
     // Stan kalendarza
     const [slots, setSlots] = useState<Slot[]>([]);
     const [absences, setAbsences] = useState<Absence[]>([]);
-    const [currentDate, setCurrentDate] = useState<Date>(new Date());
+    const [currentDate, setCurrentDate] = useState<Date>(() => {
+        // Sztywna data: 1 kwietnia 2026, godz. 11:00
+        return new Date('2026-05-01T11:00:00');
+    });
     
     // Modal
     const [selectedSlotForBooking, setSelectedSlotForBooking] = useState<Slot | null>(null);

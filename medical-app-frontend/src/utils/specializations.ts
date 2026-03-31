@@ -8,5 +8,6 @@ export const SPECIALIZATIONS = [
     "Ortopeda",
     "Psychiatra",
     "Ginekolog",
-    "Stomatolog"
+    "Stomatolog",
+    "Chirurg"
 ];

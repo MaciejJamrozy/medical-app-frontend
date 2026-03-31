@@ -110,7 +110,7 @@ const AppointmentsPage: React.FC = () => {
             <AppointmentsList 
                 title="Przyszłe wizyty"
                 appointments={upcomingAppointments}
-                isHistory={false}
+                isHistory={true}
                 isBanned={isBanned}
                 ratedDoctors={ratedDoctors}
                 onRate={handleRateClick}
