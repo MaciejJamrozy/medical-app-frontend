@@ -3,9 +3,11 @@
 A comprehensive, full-stack web application built for managing a modern medical clinic. This project was developed to facilitate the interaction between patients, doctors, and clinic administrators, offering a complete flow from finding a specialist to booking an appointment and leaving a review.
 
 <p align="center">
-  <img src="images/doc_panel.png" width="45%" alt="Doctor Panel Screenshot">
+  <img src="images/main_page.png"  alt="Main Page Screenshot">
   &nbsp;
-  <img src="images/admin_panel.png" width="45%" alt="Admin Panel Screenshot">
+  <img src="images/doc_panel.png"  alt="Doctor Panel Screenshot">
+  &nbsp;
+  <img src="images/reservation_modal.png"  alt="Reservation Modal Screenshot">
 </p>
 
 ## 🚀 Features
